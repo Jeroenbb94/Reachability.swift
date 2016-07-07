@@ -24,8 +24,7 @@ class ViewController: UIViewController {
         startNotifier()
         
         // After 5 seconds, stop and re-start reachability, this time using a hostname
-        let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(UInt64(5) * NSEC_PER_SEC))
-        dispatch_after(dispatchTime, dispatch_get_main_queue()) {
+        DispatchQueue.main.after(when: DispatchTime.now() + .seconds(5)) {
             self.stopNotifier()
             self.setupReachability(useHostName: true, useClosures: true)
             self.startNotifier()

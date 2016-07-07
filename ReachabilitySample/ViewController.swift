@@ -67,7 +67,7 @@ class ViewController: UIViewController {
                 }
             }
         } else {
-            NotificationCenter.default().addObserver(self, selector: Selector(("reachabilityChanged:")), name: ReachabilityChangedNotification, object: reachability)
+            NotificationCenter.default.addObserver(self, selector: Selector(("reachabilityChanged:")), name: NSNotification.Name(rawValue: ReachabilityChangedNotification), object: reachability)
         }
     }
     
@@ -85,7 +85,7 @@ class ViewController: UIViewController {
     func stopNotifier() {
         print("--- stop notifier")
         reachability?.stopNotifier()
-        NotificationCenter.default().removeObserver(self, name: NSNotification.Name(rawValue: ReachabilityChangedNotification), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: ReachabilityChangedNotification), object: nil)
         reachability = nil
     }
     

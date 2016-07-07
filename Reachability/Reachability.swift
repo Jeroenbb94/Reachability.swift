@@ -42,13 +42,17 @@ public let ReachabilityChangedNotification = "ReachabilityChangedNotification"
 
 func callback(reachability:SCNetworkReachability, flags: SCNetworkReachabilityFlags, info: UnsafeMutablePointer<Void>?) {
     if let info = info {
-        let reachability = Unmanaged<Reachability>.fromOpaque(OpaquePointer(info)).takeUnretainedValue()
+        let reachability = Unmanaged<Reachability>.fromOpaque(UnsafePointer<Reachability>(info)).takeUnretainedValue()
+        
+//        let reachability = Unmanaged<Reachability>.fromOpaque(OpaquePointer(info)).takeUnretainedValue()
         
         DispatchQueue.main.async() {
             reachability.reachabilityChanged(flags: flags)
         }
     }
 }
+
+
 
 public class Reachability: NSObject {
 
@@ -146,9 +150,7 @@ public class Reachability: NSObject {
         guard !notifierRunning else { return }
         
         var context = SCNetworkReachabilityContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
-        context.info = UnsafeMutablePointer(OpaquePointer(bitPattern: Unmanaged.passUnretained(self)))
-
-        // context.info = UnsafeMutablePointer(Unmanaged.passUnretained(self).toOpaque())
+        context.info = Unmanaged<Reachability>.passUnretained(self).toOpaque()
         
         if !SCNetworkReachabilitySetCallback(reachabilityRef!, callback, &context) {
             stopNotifier()
