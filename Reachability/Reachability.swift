@@ -75,7 +75,7 @@ public class Reachability: NSObject {
     public var whenReachable: NetworkReachable?
     public var whenUnreachable: NetworkUnreachable?
     public var reachableOnWWAN: Bool
-    public var notificationCenter = NotificationCenter.default()
+    public var notificationCenter = NotificationCenter.default
 
     public var currentReachabilityStatus: NetworkStatus {
         if isReachable() {
@@ -287,7 +287,7 @@ public class Reachability: NSObject {
 
     private func isOnWWAN(flags: SCNetworkReachabilityFlags) -> Bool {
         #if os(iOS)
-            return flags.contains(.iswwan)
+            return flags.contains(.isWWAN)
         #else
             return false
         #endif
