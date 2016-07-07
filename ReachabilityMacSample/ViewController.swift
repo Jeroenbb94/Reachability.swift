@@ -18,45 +18,52 @@ class ViewController: NSViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     view.wantsLayer = true
-    view.layer?.backgroundColor = NSColor.whiteColor().CGColor
+    view.layer?.backgroundColor = NSColor.white().cgColor
 
     // Start reachability without a hostname intially
-    setupReachability(useHostName: false, useClosures: true)
+    setupReachability(hostName: nil, useClosures: true)
     startNotifier()
 
     // After 5 seconds, stop and re-start reachability, this time using a hostname
-    let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(UInt64(5) * NSEC_PER_SEC))
-    dispatch_after(dispatchTime, dispatch_get_main_queue()) {
+    let dispatchTime = DispatchTime.now() + .seconds(5)
+    DispatchQueue.main.after(when: dispatchTime) {
       self.stopNotifier()
-      self.setupReachability(useHostName: true, useClosures: true)
+      self.setupReachability(hostName: "www.google.com", useClosures: true)
       self.startNotifier()
+        
+        // After another 5 seconds, stop and re-start reachability, this time using an invalid hostname
+        let invalidHostDelayTime = DispatchTime.now() + .seconds(5)
+        DispatchQueue.main.after(when: invalidHostDelayTime) {
+            self.stopNotifier()
+            self.setupReachability(hostName: "invalidhostname", useClosures: true)
+            self.startNotifier()
+        }
     }
   }
 
-  func setupReachability(useHostName useHostName: Bool, useClosures: Bool) {
-    let hostName = "google.com"
-    hostNameLabel.stringValue = useHostName ? hostName : "No host name"
+  func setupReachability(hostName: String?, useClosures: Bool) {
+    hostNameLabel.stringValue = hostName != nil ? hostName! : "No host name"
 
     print("--- set up with host name: \(hostNameLabel.stringValue)")
 
     do {
-      let reachability = try useHostName ? Reachability(hostname: hostName) : Reachability.reachabilityForInternetConnection()
+      let reachability = try hostName != nil ? Reachability(hostname: hostName!) : Reachability.reachabilityForInternetConnection()
       self.reachability = reachability
     } catch ReachabilityError.FailedToCreateWithAddress(let address) {
-      networkStatus.textColor = NSColor.redColor()
+      networkStatus.textColor = NSColor.red()
       networkStatus.stringValue = "Unable to create\nReachability with address:\n\(address)"
       return
     } catch {}
 
     if (useClosures) {
       reachability?.whenReachable = { reachability in
-        self.updateLabelColourWhenReachable(reachability)
+        self.updateLabelColourWhenReachable(reachability: reachability)
       }
       reachability?.whenUnreachable = { reachability in
-        self.updateLabelColourWhenNotReachable(reachability)
+        self.updateLabelColourWhenNotReachable(reachability: reachability)
       }
     } else {
-      NSNotificationCenter.defaultCenter().addObserver(self, selector: "reachabilityChanged:", name: ReachabilityChangedNotification, object: reachability)
+      NotificationCenter.default().addObserver(self, selector: Selector(("reachabilityChanged:")), name: ReachabilityChangedNotification, object: reachability)
     }
   }
 
@@ -65,7 +72,7 @@ class ViewController: NSViewController {
     do {
       try reachability?.startNotifier()
     } catch {
-      networkStatus.textColor = NSColor.redColor()
+      networkStatus.textColor = NSColor.red()
       networkStatus.stringValue = "Unable to start\nnotifier"
       return
     }
@@ -74,16 +81,16 @@ class ViewController: NSViewController {
   func stopNotifier() {
     print("--- stop notifier")
     reachability?.stopNotifier()
-    NSNotificationCenter.defaultCenter().removeObserver(self, name: ReachabilityChangedNotification, object: nil)
+    NotificationCenter.default().removeObserver(self, name: NSNotification.Name(rawValue: ReachabilityChangedNotification), object: nil)
     reachability = nil
   }
 
   func updateLabelColourWhenReachable(reachability: Reachability) {
     print("\(reachability.description) - \(reachability.currentReachabilityString)")
     if reachability.isReachableViaWiFi() {
-      self.networkStatus.textColor = NSColor.greenColor()
+      self.networkStatus.textColor = NSColor.green()
     } else {
-      self.networkStatus.textColor = NSColor.blueColor()
+      self.networkStatus.textColor = NSColor.blue()
     }
 
     self.networkStatus.stringValue = reachability.currentReachabilityString
@@ -92,7 +99,7 @@ class ViewController: NSViewController {
   func updateLabelColourWhenNotReachable(reachability: Reachability) {
     print("\(reachability.description) - \(reachability.currentReachabilityString)")
 
-    self.networkStatus.textColor = NSColor.redColor()
+    self.networkStatus.textColor = NSColor.red()
 
     self.networkStatus.stringValue = reachability.currentReachabilityString
   }
@@ -101,9 +108,9 @@ class ViewController: NSViewController {
     let reachability = note.object as! Reachability
 
     if reachability.isReachable() {
-      updateLabelColourWhenReachable(reachability)
+      updateLabelColourWhenReachable(reachability: reachability)
     } else {
-      updateLabelColourWhenNotReachable(reachability)
+      updateLabelColourWhenNotReachable(reachability: reachability)
     }
   }
 }

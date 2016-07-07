@@ -42,17 +42,17 @@ class ViewController: UIViewController {
             let reachability = try useHostName ? Reachability(hostname: hostName) : Reachability.reachabilityForInternetConnection()
             self.reachability = reachability
         } catch ReachabilityError.FailedToCreateWithAddress(let address) {
-            networkStatus.textColor = UIColor.redColor()
+            networkStatus.textColor = UIColor.red()
             networkStatus.text = "Unable to create\nReachability with address:\n\(address)"
             return
         } catch {}
         
         if (useClosures) {
             reachability?.whenReachable = { reachability in
-                self.updateLabelColourWhenReachable(reachability)
+                self.updateLabelColourWhenReachable(reachability: reachability)
             }
             reachability?.whenUnreachable = { reachability in
-                self.updateLabelColourWhenNotReachable(reachability)
+                self.updateLabelColourWhenNotReachable(reachability: reachability)
             }
         } else {
             NSNotificationCenter.defaultCenter().addObserver(self, selector: "reachabilityChanged:", name: ReachabilityChangedNotification, object: reachability)
@@ -80,7 +80,7 @@ class ViewController: UIViewController {
     func updateLabelColourWhenReachable(reachability: Reachability) {
         print("\(reachability.description) - \(reachability.currentReachabilityString)")
         if reachability.isReachableViaWiFi() {
-            self.networkStatus.textColor = UIColor.greenColor()
+            self.networkStatus.textColor = UIColor.green()
         } else {
             self.networkStatus.textColor = UIColor.blueColor()
         }
